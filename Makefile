@@ -116,7 +116,7 @@ shell:
 
 # Access MySQL shell
 db:
-	@docker compose exec mysql mysql -ubase -psecret base
+	@docker compose exec mysql mysql -u${DB_USERNAME:-virgosoft} -p${DB_PASSWORD:-secret} ${DB_DATABASE:-virgosoft}
 
 # Access Redis CLI
 redis:
@@ -133,7 +133,7 @@ stats:
 # Backup database
 backup:
 	@mkdir -p backups
-	@docker compose exec mysql mysqldump -ubase -psecret base > backups/backup_$(shell date +%Y%m%d_%H%M%S).sql
+	@docker compose exec mysql mysqldump -u${DB_USERNAME:-virgosoft} -p${DB_PASSWORD:-secret} ${DB_DATABASE:-virgosoft} > backups/backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "Database backed up to backups/"
 
 # Restore database from backup
@@ -157,12 +157,12 @@ setup: install
 
 install:
 	@echo "Installing Laravel dependencies..."
-	@composer install
+	@docker compose exec api composer install
 	@if [ ! -f ".env" ]; then \
 		cp .env.example .env; \
 	fi
-	@php artisan key:generate
-	@php artisan storage:link
+	@docker compose exec api php artisan key:generate
+	@docker compose exec api php artisan storage:link
 
 laravel-setup:
 	@echo "Setting up Laravel framework..."
@@ -173,6 +173,10 @@ artisan:
 
 composer:
 	@docker compose exec api composer $(ARGS)
+
+# Convenience: allow running composer subcommands without ARGS
+composer-%:
+	@docker compose exec api composer $*
 
 npm:
 	@docker compose exec api npm $(ARGS)
