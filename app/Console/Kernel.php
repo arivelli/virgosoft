@@ -11,7 +11,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule): void
     {
-        // Schedule is handled by ConsoleServiceProvider
-        // This method is kept empty to avoid duplication
+        //
     }
 }
