@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-bookworm
+FROM php:8.5-fpm-bookworm
 
 ARG PROJECT_ROOT=/var/www/html
 ENV PROJECT_ROOT=${PROJECT_ROOT}
