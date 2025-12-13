@@ -78,14 +78,14 @@ jobs:
         php artisan test --coverage-clover=coverage.xml --log-junit=test-results.xml
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: test-results
         path: test-results.xml
 
     - name: Upload coverage reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: coverage-reports
