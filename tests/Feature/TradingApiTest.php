@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class TradingApiTest extends TestCase
@@ -14,22 +14,23 @@ class TradingApiTest extends TestCase
     use RefreshDatabase;
 
     private User $alice;
+
     private User $bob;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->alice = User::factory()->create([
             'name' => 'Alice',
             'email' => 'alice@example.com',
-            'balance' => '100000.000000000000000000'
+            'balance' => '100000.000000000000000000',
         ]);
-        
+
         $this->bob = User::factory()->create([
             'name' => 'Bob',
             'email' => 'bob@example.com',
-            'balance' => '100000.000000000000000000'
+            'balance' => '100000.000000000000000000',
         ]);
 
         // Seed assets
@@ -46,7 +47,7 @@ class TradingApiTest extends TestCase
         $response = $this->postJson('/api/login', [
             'email' => 'alice@example.com',
             'password' => 'password',
-            'device_name' => 'test'
+            'device_name' => 'test',
         ]);
 
         $response->assertStatus(200)
@@ -69,15 +70,15 @@ class TradingApiTest extends TestCase
                     '*' => [
                         'symbol',
                         'amount',
-                        'locked_amount'
-                    ]
-                ]
+                        'locked_amount',
+                    ],
+                ],
             ])
             ->assertJson([
                 'id' => $this->alice->id,
                 'name' => 'Alice',
                 'email' => 'alice@example.com',
-                'balance' => '100000.000000000000000000'
+                'balance' => '100000.000000000000000000',
             ]);
     }
 
@@ -96,7 +97,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $response->assertStatus(201)
@@ -107,14 +108,14 @@ class TradingApiTest extends TestCase
                 'price',
                 'amount',
                 'status',
-                'created_at'
+                'created_at',
             ])
             ->assertJson([
                 'symbol' => 'BTC-USD',
                 'side' => 'buy',
                 'price' => '50000.000000000000000000',
                 'amount' => '0.010000000000000000',
-                'status' => Order::STATUS_OPEN
+                'status' => Order::STATUS_OPEN,
             ]);
 
         // Verify USD was locked
@@ -130,14 +131,14 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'sell',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $response->assertStatus(201)
             ->assertJson([
                 'symbol' => 'BTC-USD',
                 'side' => 'sell',
-                'status' => Order::STATUS_OPEN
+                'status' => Order::STATUS_OPEN,
             ]);
 
         // Verify asset was locked
@@ -145,7 +146,7 @@ class TradingApiTest extends TestCase
             ->where('user_id', $this->bob->id)
             ->where('symbol', 'BTC')
             ->first();
-        
+
         $this->assertEquals('0.990000000000000000', $bobAsset->amount);
         $this->assertEquals('0.010000000000000000', $bobAsset->locked_amount);
     }
@@ -159,7 +160,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'INVALID',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $response->assertStatus(422)
@@ -170,7 +171,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'invalid',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $response->assertStatus(422)
@@ -181,7 +182,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '-100',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $response->assertStatus(422)
@@ -192,7 +193,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0'
+            'amount' => '0',
         ]);
 
         $response->assertStatus(422)
@@ -207,7 +208,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '3' // Requires 150k USD
+            'amount' => '3', // Requires 150k USD
         ]);
 
         $response->assertStatus(422)
@@ -223,14 +224,14 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $this->postJson('/api/orders', [
             'symbol' => 'ETH-USD',
             'side' => 'buy',
             'price' => '3000.00',
-            'amount' => '0.1'
+            'amount' => '0.1',
         ]);
 
         // List BTC orders
@@ -274,7 +275,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $orderId = $createResponse->json('id');
@@ -285,7 +286,7 @@ class TradingApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'id' => $orderId,
-                'status' => Order::STATUS_CANCELLED
+                'status' => Order::STATUS_CANCELLED,
             ]);
 
         // Verify balance was restored
@@ -309,7 +310,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $orderId = $createResponse->json('id');
@@ -340,7 +341,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'buy',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $buyOrder = $buyResponse->json();
@@ -351,7 +352,7 @@ class TradingApiTest extends TestCase
             'symbol' => 'BTC-USD',
             'side' => 'sell',
             'price' => '50000.00',
-            'amount' => '0.01'
+            'amount' => '0.01',
         ]);
 
         $sellOrder = $sellResponse->json();
@@ -371,7 +372,7 @@ class TradingApiTest extends TestCase
             'price' => '50000.000000000000000000',
             'amount' => '0.010000000000000000',
             'usd_value' => '500.000000000000000000',
-            'commission_usd' => '7.500000000000000000'
+            'commission_usd' => '7.500000000000000000',
         ]);
 
         // Verify final balances
@@ -402,7 +403,7 @@ class TradingApiTest extends TestCase
             ->assertJson([
                 'id' => $this->alice->id,
                 'name' => 'Alice',
-                'email' => 'alice@example.com'
+                'email' => 'alice@example.com',
             ]);
     }
 }

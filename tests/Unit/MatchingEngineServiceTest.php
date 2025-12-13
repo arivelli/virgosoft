@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Events\OrderMatched;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\MatchingEngineService;
-use App\Events\OrderMatched;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -16,23 +16,25 @@ class MatchingEngineServiceTest extends TestCase
     use RefreshDatabase;
 
     private MatchingEngineService $service;
+
     private User $alice;
+
     private User $bob;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->service = app(MatchingEngineService::class);
-        
+
         $this->alice = User::factory()->create([
-            'balance' => '100000.000000000000000000'
+            'balance' => '100000.000000000000000000',
         ]);
-        
+
         $this->bob = User::factory()->create([
-            'balance' => '100000.000000000000000000'
+            'balance' => '100000.000000000000000000',
         ]);
-        
+
         // Seed assets for both users
         DB::table('assets')->insert([
             ['user_id' => $this->alice->id, 'symbol' => 'BTC', 'amount' => '1.000000000000000000', 'locked_amount' => '0.000000000000000000'],
@@ -94,7 +96,7 @@ class MatchingEngineServiceTest extends TestCase
             ->where('user_id', $this->bob->id)
             ->where('symbol', 'BTC')
             ->first();
-        
+
         $this->assertEquals('0.990000000000000000', $bobAsset->amount);
         $this->assertEquals('0.010000000000000000', $bobAsset->locked_amount);
     }
@@ -164,10 +166,10 @@ class MatchingEngineServiceTest extends TestCase
         // Verify balances
         $alice = $this->alice->fresh();
         $bob = $this->bob->fresh();
-        
+
         // Alice: 100000 - 500 (locked) = 99500
         $this->assertEquals('99500.000000000000000000', $alice->balance);
-        
+
         // Bob: 100000 + 492.5 (500 - 7.5 commission) = 100492.5
         $this->assertEquals('100492.500000000000000000', $bob->balance);
 
@@ -191,7 +193,7 @@ class MatchingEngineServiceTest extends TestCase
 
         // Verify event was dispatched
         Event::assertDispatched(OrderMatched::class, function ($event) use ($buyOrder, $sellOrder) {
-            return $event->buyOrderId === $buyOrder->id 
+            return $event->buyOrderId === $buyOrder->id
                 && $event->sellOrderId === $sellOrder->id
                 && $event->buyUserId === $this->alice->id
                 && $event->sellUserId === $this->bob->id;
@@ -299,7 +301,7 @@ class MatchingEngineServiceTest extends TestCase
             ->where('user_id', $this->bob->id)
             ->where('symbol', 'BTC')
             ->first();
-        
+
         $this->assertEquals('1.000000000000000000', $bobAsset->amount);
         $this->assertEquals('0.000000000000000000', $bobAsset->locked_amount);
     }
