@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,7 +14,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('api')->group(function () {
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/health', function () {
         return response()->json([
             'status' => 'ok',
@@ -21,6 +24,9 @@ Route::middleware('api')->group(function () {
             'timestamp' => now()->toISOString(),
         ]);
     });
+
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 Route::fallback(function () {
@@ -28,7 +34,9 @@ Route::fallback(function () {
         'error' => 'Endpoint not found',
         'message' => 'The requested API endpoint does not exist.',
         'available_endpoints' => [
-            'GET /api/health' => 'Health check',
+            'POST /api/login' => 'Create an API token',
+            'GET /api/health' => 'Health check (auth required)',
+            'GET /api/me' => 'Current user (auth required)',
         ],
     ], 404);
 });

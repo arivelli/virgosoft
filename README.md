@@ -134,6 +134,10 @@ Note: ports 80/443 must be free (stop other local stacks using those ports).
 
 ## Available API Endpoints
 
+### API/auth
+
+Authentication is handled via Laravel Sanctum; markets are intentionally fixed and seeded to keep the focus on concurrency safety and matching logic.
+
 - `GET /api/health` - Health check endpoint
 
 ## Development
