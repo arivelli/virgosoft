@@ -19,7 +19,6 @@ yarn-error.log
 /app/Events/Handler.php
 /app/Events/Event.php
 /database/factories/
-/database/seeders/DatabaseSeeder.php
 
 # Laravel Telescope
 storage/telescope/
