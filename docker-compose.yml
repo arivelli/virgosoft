@@ -1,0 +1,161 @@
+services:
+  # Laravel API Service (PHP-FPM)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-virgosoft}_api
+    environment:
+      XDEBUG_MODE: ${XDEBUG_MODE:-off}
+    volumes:
+      # Mount entire /storage directory for path consistency between host and container
+      - /storage:/storage
+      # Mount PHP configuration directory for complete control
+      - ./etc/php:/usr/local/etc/php
+      # SSH keys for www-data user
+      - ~/.ssh:/home/www-data/.ssh:ro
+      # Composer home for persistent auth tokens
+      - virgosoft-composer-home:/home/www-data/.composer
+    tmpfs:
+      - /tmp
+    working_dir: ${PROJECT_PATH:-/storage/code/personal/virgosoft}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      virgosoft:
+        ipv4_address: ${API_IP:-172.22.0.10}
+    # Domain resolution for local development
+    extra_hosts:
+      - "${DOMAIN:-virgosoft.local.xima.com.ar}:${NGINX_IP:-172.22.0.30}"
+
+  # Laravel Scheduler Service
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-virgosoft}_scheduler
+    command: php artisan schedule:work
+    environment:
+      XDEBUG_MODE: off
+    volumes:
+      - /storage:/storage
+      - ./etc/php:/usr/local/etc/php
+      - virgosoft-composer-home:/home/www-data/.composer
+    working_dir: ${PROJECT_PATH:-/storage/code/personal/virgosoft}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      virgosoft:
+        ipv4_address: ${SCHEDULER_IP:-172.22.0.11}
+    restart: unless-stopped
+    # Run as www-data for development
+    user: "www-data:www-data"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # Health check
+    healthcheck:
+      test: ["CMD", "php", "artisan", "schedule:list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: ${PROJECT_NAME:-virgosoft}_nginx
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # Run as root first to install shadow and adjust permissions,
+    # then switch to the nginx user (uid 1000)
+    command: >
+      sh -c "apk add --no-cache shadow &&
+             usermod -u 1000 nginx &&
+             groupmod -g 1000 nginx &&
+             nginx -g 'daemon off;'"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Mount complete Nginx configuration directory
+      - ./etc/nginx:/etc/nginx
+      # Mount SSL certificates
+      - ./etc/ssl/certs:/etc/nginx/ssl/certs:ro
+      # Mount entire /storage directory for path consistency between host and container
+      - /storage:/storage
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      virgosoft:
+        ipv4_address: ${NGINX_IP:-172.22.0.30}
+    # For development - enable Xdebug
+    extra_hosts:
+      - "host.docker.com:host-gateway"
+    restart: unless-stopped
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ${PROJECT_NAME:-virgosoft}_mysql
+    command: --innodb_flush_log_at_trx_commit=2 --sync_binlog=0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-virgosoft}
+      MYSQL_USER: ${DB_USERNAME:-virgosoft}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - virgosoft-db:/var/lib/mysql
+      - ./etc/mysql/my.cnf:/etc/my.cnf:ro
+      - ./etc/mysql/conf.d:/etc/mysql/conf.d:ro
+    networks:
+      virgosoft:
+        ipv4_address: ${MYSQL_IP:-172.22.0.50}
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME:-virgosoft}_redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - ./etc/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - virgosoft-redis-data:/data
+    sysctls:
+      net.core.somaxconn: "65535"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      virgosoft:
+        ipv4_address: ${REDIS_IP:-172.22.0.60}
+    restart: unless-stopped
+
+volumes:
+  virgosoft-db:
+  virgosoft-composer-home:
+    driver: local
+  virgosoft-redis-data:
+    driver: local
+
+networks:
+  virgosoft:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NETWORK_SUBNET:-172.22.0.0/16}
+          gateway: ${NETWORK_GATEWAY:-172.22.0.1}

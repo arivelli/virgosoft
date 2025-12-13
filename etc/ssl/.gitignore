@@ -1,0 +1,25 @@
+# SSL Certificate Files - Ignore actual certificates but keep structure
+
+# CA private key (should never be committed)
+ca/private/ca.key.pem
+
+# Domain certificates and keys
+certs/*.pem
+certs/*.key
+certs/*.csr
+
+# Certificate bundles
+ca-bundle/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Keep directory structure files
+!ca/.gitkeep
+!certs/.gitkeep
+!.gitkeep

@@ -1,0 +1,25 @@
+[mysqld]
+# Optimizer settings for development
+optimizer_switch='index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on'
+
+# InnoDB settings for better performance
+innodb_file_per_table=1
+innodb_flush_method=O_DIRECT
+
+# Table settings
+table_open_cache=256
+open_files_limit=65535
+
+# Memory settings
+tmp_table_size=32M
+max_heap_table_size=32M
+
+# Join settings
+join_buffer_size=2M
+sort_buffer_size=2M
+read_buffer_size=1M
+read_rnd_buffer_size=2M
+
+# MyISAM settings (if needed)
+key_buffer_size=16M
+myisam_sort_buffer_size=8M

@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: bcmath, exif, intl, pcntl, pdo_mysql, zip, redis
+
+    - name: Install Composer dependencies
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+    - name: Run tests
+      run: composer test
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get previous tag
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        # Generate changelog
+        if [ -n "$PREVIOUS_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s")
+        fi
+        
+        # Save to file for next step
+        echo "$CHANGELOG" > CHANGELOG.md
+        
+        # Set output for GitHub release
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## 🚀 Release ${{ github.ref }}
+          
+          ### 📋 Changes
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ### 🐳 Docker Image
+          ```bash
+          docker pull adrianrivelli/fever-code-challenge:${{ github.ref_name }}
+          ```
+          
+          ### ⚡ Quick Start
+          ```bash
+          docker compose up -d
+          curl -k "https://fever.local/api/health"
+          ```
+          
+          ### 📊 Features
+          - ✅ RESTful API with plan search
+          - ✅ Redis caching with tags
+          - ✅ Circuit breaker protection
+          - ✅ Async job processing
+          - ✅ Laravel scheduler
+          - ✅ Health monitoring
+          - ✅ Complete test suite (31 tests)
+          - ✅ Docker containerization
+          
+          ### 🛠️ Tech Stack
+          - Laravel 12.36.1, PHP 8.3
+          - MySQL 8.0, Redis 7.2
+          - Docker & Docker Compose
+          - GitHub Actions CI/CD
+          
+          ---
+          **Built with ❤️ using modern PHP practices**
+        draft: false
+        prerelease: false
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          adrianrivelli/fever-code-challenge:latest
+          adrianrivelli/fever-code-challenge:${{ github.ref_name }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Update deployment status
+      run: |
+        echo "🎉 Release ${{ github.ref_name }} deployed successfully!"
+        echo "🐳 Docker image: adrianrivelli/fever-code-challenge:${{ github.ref_name }}"
+        echo "📦 Release notes: https://github.com/adrianrivelli/fever-code-challenge/releases/tag/${{ github.ref_name }}"

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# PHP-FPM Health Check Script
+# Returns 0 if PHP-FPM is healthy, 1 otherwise
+
+# Use cgi-fcgi to check PHP-FPM status
+if command -v cgi-fcgi >/dev/null 2>&1; then
+    # Create a simple FastCGI request
+    echo "QUERY_METHOD=GET" | cgi-fcgi -bind -connect 127.0.0.1:9000 >/dev/null 2>&1
+    exit $?
+else
+    # Fallback: check if PHP-FPM process is running
+    pgrep php-fpm >/dev/null 2>&1
+    exit $?
+fi
