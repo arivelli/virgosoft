@@ -80,7 +80,7 @@ print_success "Laravel project created"
 # Copy Laravel files to project directory
 print_status "Copying Laravel files to project directory..."
 
-docker compose exec -T api sh -c "cp -r /tmp/laravel-temp/* /storage/code/personal/virgosoft/ && cp -r /tmp/laravel-temp/.* /storage/code/personal/virgosoft/ 2>/dev/null || true"
+docker compose exec -T api sh -c "cp -r /tmp/laravel-temp/* ${PROJECT_ROOT:-/var/www/html}/ && cp -r /tmp/laravel-temp/.* ${PROJECT_ROOT:-/var/www/html}/ 2>/dev/null || true"
 
 # Clean up temporary directory
 docker compose exec -T api rm -rf /tmp/laravel-temp

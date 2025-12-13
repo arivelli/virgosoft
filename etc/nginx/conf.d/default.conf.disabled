@@ -29,7 +29,7 @@ server {
     charset utf-8;
     
     # Root directory
-    root /storage/code/personal/virgosoft/public;
+    root /var/www/html/public;
     index index.php index.html index.htm;
     
     # Location for PHP files
@@ -98,7 +98,7 @@ server {
     charset utf-8;
     
     # Root directory
-    root /storage/code/personal/virgosoft/public;
+    root /var/www/html/public;
     index index.php index.html index.htm;
     
     # Location for PHP files

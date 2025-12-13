@@ -215,6 +215,9 @@ config/local.php
 config/local.*
 .local.*
 
+# IDE / assistant local rules
+.windsurf/
+
 # Database
 *.sqlite
 *.sqlite3

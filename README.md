@@ -32,17 +32,13 @@ cd virgosoft
 
 # Start the application (builds, starts, and migrates everything)
 make run
-
-# Or manually:
-docker compose up -d
-docker compose exec api php artisan migrate
 ```
 
 ### Access Points
 
-- **Main site**: http://virgosoft.local.xima.com.ar
-- **API**: http://api.virgosoft.local.xima.com.ar
-- **API Health**: http://api.virgosoft.local.xima.com.ar/api/health
+- **Main site**: https://virgosoft.local.xima.com.ar
+- **API**: https://api.virgosoft.local.xima.com.ar
+- **API Health**: https://api.virgosoft.local.xima.com.ar/api/health
 
 ### Development Commands
 
@@ -97,7 +93,15 @@ Copy `.env.example` to `.env` and configure your settings:
 
 ```bash
 cp .env.example .env
-php artisan key:generate
+
+# Important: APP_KEY must be generated inside the container
+docker compose exec api php artisan key:generate
+```
+
+If you prefer to generate the key on the host and paste it into `.env`:
+
+```bash
+docker compose exec -T api php artisan key:generate --show
 ```
 
 ### Domain Setup
@@ -109,6 +113,8 @@ For local development with custom domains:
 make setup-hosts
 ```
 
+If you run `setup-hosts` before containers are up, it will not be able to resolve container IPs.
+
 ### SSL Setup (Optional)
 
 For HTTPS development:
@@ -117,9 +123,14 @@ For HTTPS development:
 # Generate SSL certificates
 make ssl-setup
 
-# Install CA certificates
-make install-ca-all
+# Install CA certificates (Linux)
+make install-ca-linux
+
+# Prepare Nginx SSL configuration
+make setup-ssl
 ```
+
+Note: ports 80/443 must be free (stop other local stacks using those ports).
 
 ## Available API Endpoints
 
@@ -187,6 +198,5 @@ make optimize
 
 If you have any questions or issues, please check the documentation or create an issue in the repository.
 
----
 
-Thank you for using Base! 🎉
+---

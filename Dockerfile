@@ -1,5 +1,8 @@
 FROM php:8.3-fpm-bookworm
 
+ARG PROJECT_ROOT=/var/www/html
+ENV PROJECT_ROOT=${PROJECT_ROOT}
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # PHP extensions dependencies
@@ -38,7 +41,7 @@ RUN usermod -s /bin/bash www-data \
     && chmod 700 /home/www-data/.ssh \
     && chown -R www-data:www-data /home/www-data \
     && echo 'export PS1="\[\033[1;36m\]\u@\h:\w\\$ \[\033[0m\]"' >> /home/www-data/.bashrc \
-    && echo 'export PATH="$PATH:/storage/code/personal/virgosoft/vendor/bin:/home/www-data/.composer/vendor/bin"' >> /home/www-data/.bashrc \
+    && echo 'export PATH="$PATH:${PROJECT_ROOT}/vendor/bin:/home/www-data/.composer/vendor/bin"' >> /home/www-data/.bashrc \
     && echo 'export COMPOSER_HOME="/home/www-data/.composer"' >> /home/www-data/.bashrc \
     && echo 'alias ll="ls -la"' >> /home/www-data/.bashrc \
     && echo 'alias artisan="php artisan"' >> /home/www-data/.bashrc \
@@ -59,7 +62,7 @@ COPY etc/healthcheck/php-fpm-healthcheck /usr/local/bin/php-fpm-healthcheck
 RUN chmod +x /usr/local/bin/php-fpm-healthcheck
 
 # Set working directory
-WORKDIR ${PROJECT_PATH:-/storage/code/personal/virgosoft}
+WORKDIR ${PROJECT_ROOT}
 
 # Install libfcgi-bin for health check
 RUN apt-get update && apt-get install -y --no-install-recommends libfcgi-bin \
@@ -69,9 +72,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends libfcgi-bin \
 RUN mkdir -p /var/run/php-fpm
 
 # Create and set permissions for Xdebug log directory
-RUN mkdir -p ${PROJECT_PATH:-/storage/code/personal/virgosoft}/xdebug \
-    && chown -R www-data:www-data ${PROJECT_PATH:-/storage/code/personal/virgosoft}/xdebug \
-    && chmod -R 777 ${PROJECT_PATH:-/storage/code/personal/virgosoft}/xdebug
+RUN mkdir -p ${PROJECT_ROOT}/xdebug \
+    && chown -R www-data:www-data ${PROJECT_ROOT}/xdebug \
+    && chmod -R 777 ${PROJECT_ROOT}/xdebug
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

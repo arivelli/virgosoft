@@ -260,7 +260,10 @@ bundle-ca:
 
 setup-ssl:
 	@echo "Setting up SSL configuration for Nginx..."
-	@if [ ! -f "${SSL_CERT_PATH:-/etc/nginx/ssl/certs/virgosoft.local.xima.com.ar.cert.pem}" ]; then \
+	@. ./.env 2>/dev/null || true; \
+	DOMAIN_CERT="./etc/ssl/certs/$${DOMAIN}.cert.pem"; \
+	API_CERT="./etc/ssl/certs/$${API_DOMAIN}.cert.pem"; \
+	if [ -z "$$DOMAIN" ] || [ -z "$$API_DOMAIN" ] || [ ! -f "$$DOMAIN_CERT" ] || [ ! -f "$$API_CERT" ]; then \
 		echo "SSL certificates not found. Please run 'make ssl-setup' first."; \
 		exit 1; \
 	fi
