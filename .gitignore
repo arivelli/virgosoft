@@ -18,7 +18,6 @@ yarn-error.log
 # Laravel specific
 /app/Events/Handler.php
 /app/Events/Event.php
-/database/factories/
 
 # Laravel Telescope
 storage/telescope/

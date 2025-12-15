@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Event;
 
 class MatchingEngineService
 {
+    private const COMMISSION_RATE = 0.015; // 1.5%
+
+    public function __construct()
+    {
+    }
+
     public function createOrder(User $user, string $symbol, string $side, string $price, string $amount): object
     {
         return DB::transaction(function () use ($user, $symbol, $side, $price, $amount) {
@@ -173,7 +179,7 @@ class MatchingEngineService
         $price = $buyOrder->price;
         $amount = $buyOrder->amount;
         $usdValue = \bcmul($price, $amount, 18);
-        $commissionUsd = \bcmul($usdValue, '0.015', 18);
+        $commissionUsd = \bcmul($usdValue, (string)self::COMMISSION_RATE, 18);
         $netUsdValue = \bcsub($usdValue, $commissionUsd, 18);
 
         $assetSymbol = str_replace('-USD', '', $buyOrder->symbol);

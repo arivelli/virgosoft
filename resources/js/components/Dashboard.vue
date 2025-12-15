@@ -349,6 +349,19 @@ const setupPusher = () => {
     fetchOrders();
     fetchProfile();
   });
+  
+  // Handle connection errors gracefully
+  window.pusher.connection.bind('connected', () => {
+    console.log('Real-time updates connected');
+  });
+  
+  window.pusher.connection.bind('disconnected', () => {
+    console.log('Real-time updates disconnected');
+  });
+  
+  window.pusher.connection.bind('error', (err) => {
+    console.error('Real-time connection error:', err);
+  });
 };
 
 onMounted(async () => {

@@ -19,22 +19,26 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/health', function () {
-        return response()->json([
-            'status' => 'ok',
-            'message' => 'Base API is running',
-            'timestamp' => now()->toISOString(),
-        ]);
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::get('/health', function () {
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Base API is running',
+                'timestamp' => now()->toISOString(),
+            ]);
+        });
     });
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/profile', ProfileController::class);
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::get('/profile', ProfileController::class);
 
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::post('/orders', [OrderController::class, 'store']);
-    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::post('/orders', [OrderController::class, 'store']);
+        Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+    });
     
     // Broadcasting authentication
     Route::post('/broadcasting/auth', function () {

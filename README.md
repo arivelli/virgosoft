@@ -81,7 +81,7 @@ npm run dev
 
 ### Trading
 - `GET /api/profile` - User balance and assets
-- `GET /api/orders?symbol=BTC-USD` - List user orders
+- `GET /api/orders?symbol=BTC-USD` - Orderbook (all open orders)
 - `POST /api/orders` - Create new order
 - `POST /api/orders/{id}/cancel` - Cancel order
 
@@ -105,6 +105,11 @@ npm run dev
 ```bash
 make test
 ```
+
+### Test Users
+After running `make migrate && make seed`:
+- alice@example.com / password
+- bob@example.com / password
 
 ### Run Specific Tests
 ```bash

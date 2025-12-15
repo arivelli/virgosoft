@@ -34,11 +34,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_mysql
+          extensions: mbstring, pdo_mysql, bcmath
           coverage: none
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Regenerate autoloader
+        run: composer dump-autoload
 
       - name: Prepare environment
         run: |
