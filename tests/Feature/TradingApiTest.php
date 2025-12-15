@@ -234,14 +234,14 @@ class TradingApiTest extends TestCase
             'amount' => '0.1',
         ]);
 
-        // List BTC orders
+        // List BTC orders (orderbook - returns all open orders)
         $response = $this->getJson('/api/orders?symbol=BTC-USD');
 
         $response->assertStatus(200)
             ->assertJsonCount(1)
             ->assertJsonPath('0.symbol', 'BTC-USD');
 
-        // List ETH orders
+        // List ETH orders (orderbook - returns all open orders)
         $response = $this->getJson('/api/orders?symbol=ETH-USD');
 
         $response->assertStatus(200)

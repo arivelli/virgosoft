@@ -22,9 +22,11 @@ class OrderController extends Controller
         ]);
 
         $orders = DB::table('orders')
-            ->where('user_id', $request->user()->id)
             ->where('symbol', $request->get('symbol'))
-            ->orderBy('created_at', 'desc')
+            ->where('status', 0) // Only open orders
+            ->orderBy('side', 'asc') // Buy orders first
+            ->orderBy('price', 'desc') // Highest price first for buys
+            ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn ($order) => [
                 'id' => $order->id,
@@ -46,8 +48,8 @@ class OrderController extends Controller
         $data = $request->validate([
             'symbol' => ['required', 'string', 'in:BTC-USD,ETH-USD'],
             'side' => ['required', 'string', 'in:buy,sell'],
-            'price' => ['required', 'numeric', 'decimal:0,18', 'gt:0'],
-            'amount' => ['required', 'numeric', 'decimal:0,18', 'gt:0'],
+            'price' => ['required', 'numeric', 'gt:0'],
+            'amount' => ['required', 'numeric', 'gt:0'],
         ]);
 
         try {

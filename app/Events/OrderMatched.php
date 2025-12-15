@@ -4,11 +4,11 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderMatched implements ShouldBroadcast
+class OrderMatched implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -27,8 +27,8 @@ class OrderMatched implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('private-user.'.$this->buyUserId),
-            new PrivateChannel('private-user.'.$this->sellUserId),
+            new PrivateChannel('user.'.$this->buyUserId),
+            new PrivateChannel('user.'.$this->sellUserId),
         ];
     }
 

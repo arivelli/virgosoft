@@ -35,6 +35,37 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+    
+    // Broadcasting authentication
+    Route::post('/broadcasting/auth', function () {
+        $pusher = new \Pusher\Pusher(
+            config('broadcasting.connections.pusher.key'),
+            config('broadcasting.connections.pusher.secret'),
+            config('broadcasting.connections.pusher.app_id'),
+            config('broadcasting.connections.pusher.options')
+        );
+        
+        $channelName = request('channel_name');
+        $socketId = request('socket_id');
+        
+        // For private channels, check if user is authenticated
+        if (str_starts_with($channelName, 'private-')) {
+            $user = request()->user();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+            
+            // Check if user can access this channel (private-user.{id})
+            if (preg_match('/private-user\.(\d+)/', $channelName, $matches)) {
+                $userId = (int) $matches[1];
+                if ($userId !== $user->id) {
+                    return response()->json(['message' => 'Forbidden'], 403);
+                }
+            }
+        }
+        
+        return $pusher->socket_auth($channelName, $socketId);
+    });
 });
 
 Route::fallback(function () {
@@ -50,6 +81,7 @@ Route::fallback(function () {
             'GET /api/orders?symbol=BTC-USD' => 'User orders (auth required)',
             'POST /api/orders' => 'Create order (auth required)',
             'POST /api/orders/{id}/cancel' => 'Cancel order (auth required)',
+            'POST /api/broadcasting/auth' => 'Pusher authentication (auth required)',
         ],
     ], 404);
 });
